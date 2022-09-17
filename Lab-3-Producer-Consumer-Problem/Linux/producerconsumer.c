@@ -19,7 +19,7 @@ sem_t empty, full, mutex;
 
 typedef struct
 {
-    int value[BUFFER_SIZE];
+    char value[BUFFER_SIZE];
     int next_in, next_out;
 } buffer_t;
 
@@ -27,13 +27,12 @@ buffer_t buffer;
 
 int insertInitial(char initial, long int id)
 {
-    printf(" next_in = %d next_out = %d \n", buffer.next_in, buffer.next_out);
 
     buffer.value[buffer.next_in] = initial;
     buffer.next_in = (buffer.next_in + 1) % BUFFER_SIZE;
-    printf("producer %ld: inserted %c\n", id, initial);
+    printf("producer %ld: produced %c\n", id, initial);
 
-    printf("Buffer: ");
+    printf("\t\t\t\t\t\tBuffer: ");
     for (int i = 0; i < BUFFER_SIZE; i++)
     {
         printf("%c ", buffer.value[i]);
@@ -43,14 +42,31 @@ int insertInitial(char initial, long int id)
     return 0;
 }
 
+int consumerInitial(char *initial, long int id)
+{
+
+	*initial = buffer.value[buffer.next_out];
+	buffer.value[buffer.next_out] = '-';
+	buffer.next_out = (buffer.next_out + 1) % BUFFER_SIZE;
+	printf("\t\t\tconsumer %ld: consumed %c\n", id, *initial);
+	
+	printf("\t\t\t\t\t\tBuffer: ");
+	
+    for (int i = 0; i < BUFFER_SIZE; i++)
+    {
+        printf("%c ", buffer.value[i]);
+    }
+    printf("\n");
+    
+    return 0;
+	
+}
+
 void *Producer(void *param)
 {
-    printf("\n\tProducer %ld created and will iterate %d times\n", (long int)param + 1, PRODUCER_ITERATIONS);
 
     char initials[] = "XQL";
     int length = strlen(initials);
-
-    printf("length: %d\n", length);
 
     char initial;
     long int id = (long int)param;
@@ -61,22 +77,17 @@ void *Producer(void *param)
 
         // wait for random length of time from 0 to 3 seconds
         int randnum = rand() % 4; // range between 0 and 3
-        printf("\t\tWaiting for %d seconds in iteration %d of Producer %ld\n", randnum, j, (long int)param + 1);
-        sleep(randnum);
 
         // insert random initial into buffer
 
         // int item;
         // long int id = (long int)param;
 
-        int randinitial = rand() % length;
-        printf("randinitial = %d\n", randinitial);
-        printf("Random initial: %c\n", initials[randinitial]);
+        int randInitial = rand() % length;
 
         sem_wait(&empty);
         sem_wait(&mutex);
-        initial = initials[randinitial];
-        printf("initial: %c\n", initial);
+        initial = initials[randInitial];
         if (insertInitial(initial, id))
             fprintf(stderr, "Error while inserting to buffer\n");
 
@@ -85,13 +96,32 @@ void *Producer(void *param)
         // item = rand() % 10000;
         // if (insert_item(item, id))
         //     fprintf(stderr, "Error while inserting to buffer\n");
+        
     }
 
     pthread_exit(0);
 }
 void *Consumer(void *param)
 {
-    printf("\n\tConsumer %ld created and will iterate %d times\n", (long int)param + 1, CONSUMER_ITERATIONS);
+    
+    char initial;
+    long int id = (long int)param; 
+    
+    int k = CONSUMER_ITERATIONS;
+    
+    while (k--)
+    {
+    	sleep(rand() % 6);
+    	
+    	// read from buffer
+    	
+    	sem_wait(&full);
+    	sem_wait(&mutex);
+    	if (consumerInitial(&initial, id))
+    		fprintf(stderr, "Error while removing from buffer\n");
+    	sem_post(&mutex);
+    	sem_post(&empty);
+    }
 
     pthread_exit(0);
 }
@@ -106,7 +136,7 @@ int main()
 
     printf("\nInitialize buffer of size %d with '-' \n", BUFFER_SIZE);
 
-    printf("Buffer: ");
+    printf("\t\t\t\t\t\tBuffer: ");
     for (int i = 0; i < BUFFER_SIZE; i++)
     {
         buffer.value[i] = '-';
@@ -119,19 +149,13 @@ int main()
     long int i;
 
     // create consumer threads
-    printf("\nCreating %d Consumers and %d Producers\n", CONSUMERS, PRODUCERS);
+    printf("\nCreating %d Consumers and %d Producers\n\n", CONSUMERS, PRODUCERS);
 
     sem_init(&full, 0, 0);
     sem_init(&empty, 0, BUFFER_SIZE);
     sem_init(&mutex, 0, 1);
-
-    for (i = 0; i < CONSUMERS; i++)
-        if (pthread_create(&consumerId[i], NULL, Consumer, (void *)i) != 0)
-        {
-            perror("pthread_create");
-            abort();
-        }
-    // Create the producer threads
+    
+        // Create the producer threads
     for (i = 0; i < PRODUCERS; i++)
         if (pthread_create(&producerId[i], NULL, Producer, (void *)i) != 0)
         {
@@ -139,17 +163,29 @@ int main()
             abort();
         }
 
-    // Wait for threads to complete
     for (i = 0; i < CONSUMERS; i++)
-        if (pthread_join(consumerId[i], NULL) != 0)
+        if (pthread_create(&consumerId[i], NULL, Consumer, (void *)i) != 0)
         {
-            perror("pthread_join");
+            perror("pthread_create");
             abort();
         }
+        
+        // Wait for threads to complete
+
     for (i = 0; i < PRODUCERS; i++)
         if (pthread_join(producerId[i], NULL) != 0)
         {
             perror("pthread_join");
             abort();
         }
+
+    for (i = 0; i < CONSUMERS; i++)
+        if (pthread_join(consumerId[i], NULL) != 0)
+        {
+            perror("pthread_join");
+            abort();
+        }
+
+        
+    return 0; 
 }
