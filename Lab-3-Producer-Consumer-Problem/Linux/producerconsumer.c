@@ -1,9 +1,11 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <unistd.h> // for sleep function in linux
-#include <string.h>
-#include <semaphore.h>
+// BIT 100073007 Operating Systems Course Lab 3: Producer-Consumer Problem
+
+#include <stdio.h> // printf(), fprintf()
+#include <stdlib.h> // rand() 
+#include <pthread.h> // pthread_...
+#include <unistd.h> // sleep()
+#include <string.h> // strlen()
+#include <semaphore.h> // sem_...
 
 #define BUFFER_SIZE 4
 
@@ -11,11 +13,11 @@
 #define CONSUMERS 4
 
 #define PRODUCER_ITERATIONS 4 // number of times producer loops
-#define CONSUMER_ITERATIONS 3
+#define CONSUMER_ITERATIONS 3 // number of times consumer loops 
 
-pthread_t consumerId[CONSUMERS], producerId[PRODUCERS];
+pthread_t consumerId[CONSUMERS], producerId[PRODUCERS]; //define threads
 
-sem_t empty, full, mutex;
+sem_t empty, full, mutex; //define 3 semaphores 
 
 typedef struct
 {
@@ -25,6 +27,8 @@ typedef struct
 
 buffer_t buffer;
 
+
+// insertInitial function is used to add an initial to the buffer
 int insertInitial(char initial, long int id)
 {
 
@@ -42,6 +46,7 @@ int insertInitial(char initial, long int id)
     return 0;
 }
 
+// consumeInitial function is used to consume an initial from the buffer
 int consumerInitial(char *initial, long int id)
 {
 
@@ -62,6 +67,8 @@ int consumerInitial(char *initial, long int id)
 	
 }
 
+// Producer will iterate PRODUCER_ITERATIONS times and call the insertInitial function to insert an initial to the buffer
+// Producer argument param is an integer id of the producer used to distiguish between the multiple producer threads
 void *Producer(void *param)
 {
 
@@ -101,6 +108,9 @@ void *Producer(void *param)
 
     pthread_exit(0);
 }
+
+// Consumer will iterate CONSUMER_ITERATIONS times and call the consumeInitial function to insert an initial to the buffer
+// Consumer argument param is an integer id of the consumer used to distiguish between the multiple consumer threads
 void *Consumer(void *param)
 {
     
