@@ -1,0 +1,6 @@
+    3. Experiment videos of experiment 1-5 (8 points)
+        1. Selfie with face + student ID 
+        2. Program source code 
+        3. Vocally explain program ideas 
+        4. Run the program 
+        5. Explanation of program results (Experiment 1 can be explained with screenshots)
