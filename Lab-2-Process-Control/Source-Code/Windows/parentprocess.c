@@ -7,7 +7,6 @@ void _tmain(int argc, TCHAR *argv[])
 
     SYSTEMTIME st, et; // pointer to a SYSTEMTIME structure to receive the current system date and time.
 
-
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
 
@@ -15,7 +14,7 @@ void _tmain(int argc, TCHAR *argv[])
     si.cb = sizeof(si);
     ZeroMemory(&pi, sizeof(pi));
 
-    if (argc != 2)
+    if (argc != 2) /* argc should be 2 for correct execution */
     {
         printf("Usage: %s [cmdline]\n", argv[0]);
         return;
@@ -39,14 +38,15 @@ void _tmain(int argc, TCHAR *argv[])
     }
 
     GetSystemTime(&st);
-    printf("The child process start time is: %02dh:%02dm:%02ds:%02dms\n", st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+    printf("The child process start time is: %02dh:%02dm:%02ds.%02dms\n", st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
 
     // Wait until child process exits.
-    printf("Waiting for 3 seconds\n");
-    WaitForSingleObject(pi.hProcess, 3000);
+    WaitForSingleObject(pi.hProcess, INFINITE);
     
     GetSystemTime(&et);
-    printf(" The child process end time is: %02dh:%02dm:%02ds:%02dms\n", et.wHour, et.wMinute, et.wSecond, et.wMilliseconds);
+    printf("The child process end time is: %02dh:%02dm:%02ds.%02dms\n", et.wHour, et.wMinute, et.wSecond, et.wMilliseconds);
+
+    printf("The child process elapsed time is: %02ds.%02dms\n", et.wSecond-st.wSecond, et.wMilliseconds-st.wMilliseconds);
 
     // Close process and thread handles.
     CloseHandle(pi.hProcess);
