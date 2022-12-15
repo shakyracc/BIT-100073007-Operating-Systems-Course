@@ -8,7 +8,6 @@
 int main (int argc, char *argv[]) {
 
 	struct timeval start, end;
-	char *cmd="ls";
 
 	pid_t pid;
 	pid = fork();
@@ -16,12 +15,10 @@ int main (int argc, char *argv[]) {
 	if(pid==0) {
 		gettimeofday(&start, NULL);
 		printf("Start child process\n");
-		printf("Hi, my name is Xiaqila.\n");
-		printf("exec() will run ls -l.\n");
-		int sts_cd = execvp(cmd, argv);
+		int sts_cd = execv("/home/shak/Documents/BIT-100073007-Operating-Systems-Course/Lab-2-Process-Control/Source-Code/Linux/childprocess", argv);
 		printf("There is an issues with the running command\n");
 		if (sts_cd == -1) {
-			printf("execvp error! \n");
+			printf("execv error! \n");
 			return 1;
 		}
 	}
