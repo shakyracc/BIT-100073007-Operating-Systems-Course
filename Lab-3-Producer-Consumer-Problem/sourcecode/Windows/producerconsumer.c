@@ -1,12 +1,12 @@
 // BIT 100073007 Operating Systems Course Lab 3: Producer-Consumer Problem
 // WIN32
 
-#include <stdio.h>      // printf(), fprintf()
-#include <windows.h>    //
-#include <stdlib.h>     // rand()
-#include <string.h>     // strlen()
-#include <tchar.h>      // ?
-#include <strsafe.h>    // ?
+#include <stdio.h>   // printf(), fprintf()
+#include <windows.h> //
+#include <stdlib.h>  // rand()
+#include <string.h>  // strlen()
+#include <tchar.h>   // ?
+#include <strsafe.h> // ?
 
 #define BUFFER_SIZE 4
 
@@ -20,7 +20,7 @@
 DWORD WINAPI Producer(LPVOID lpParam);
 DWORD WINAPI Consumer(LPVOID lpParam);
 
-void ErrorHandler(LPCTSTR lpszFunction);
+// void ErrorHandler(LPCTSTR lpszFunction);
 
 // define threads
 DWORD consumerId[CONSUMERS], producerId[PRODUCERS];
@@ -91,18 +91,19 @@ DWORD WINAPI Producer(LPVOID lpParam)
     {
         // wait for random length of time from 0 to 3 seconds
         int randnum = rand() % 4; // range between 0 and 3
+        Sleep((rand() % 4) * 1000);
 
         // insert random initial into buffer
-        int randInitial  = rand() % length;
+        int randInitial = rand() % length;
 
-        WaitForSingleObject(empty, INFINITE);      
-        WaitForSingleObject(mutex, INFINITE);   
+        WaitForSingleObject(empty, INFINITE);
+        WaitForSingleObject(mutex, INFINITE);
         initial = initials[randInitial];
         if (insertInitial(initial, id))
             fprintf(stderr, "Error while inserting to buffer\n");
 
-        ReleaseSemaphore(mutex, 1, NULL)
-        ReleaseSemaphore(full, 1, NULL)
+        ReleaseSemaphore(mutex, 1, NULL);
+        ReleaseSemaphore(full, 1, NULL);
     }
 
     ExitThread(0);
@@ -110,7 +111,7 @@ DWORD WINAPI Producer(LPVOID lpParam)
 
 // Consumer will iterate CONSUMER_ITERATIONS times and call the consumeInitial function to insert an initial to the buffer
 // Consumer argument param is an integer id of the consumer used to distiguish between the multiple consumer threads
-DWORD WINAPI Consumer(LPVOID lpParam);
+DWORD WINAPI Consumer(LPVOID lpParam)
 {
 
     char initial;
@@ -120,16 +121,16 @@ DWORD WINAPI Consumer(LPVOID lpParam);
 
     while (k--)
     {
-        Sleep((rand() % 6)*1000);
+        Sleep((rand() % 6) * 1000);
 
         // read from buffer
 
-        WaitForSingleObject(full, INFINITE); 
-        WaitForSingleObject(mutex, INFINITE);  
-        if (consumerInitial(&initial, id))
+        WaitForSingleObject(full, INFINITE);
+        WaitForSingleObject(mutex, INFINITE);
+        if (consumeInitial(&initial, id))
             fprintf(stderr, "Error while removing from buffer\n");
-        ReleaseSemaphore(mutex, 1, NULL)
-        ReleaseSemaphore(full, 1, NULL)
+        ReleaseSemaphore(mutex, 1, NULL);
+        ReleaseSemaphore(full, 1, NULL);
     }
 
     ExitThread(0);
@@ -162,21 +163,21 @@ int _tmain()
 
     full = CreateSemaphore(NULL, 0, BUFFER_SIZE, NULL);
     empty = CreateSemaphore(NULL, BUFFER_SIZE, BUFFER_SIZE, NULL);
-    mutex = CreateSemaphore(NULL, 1, 1, NULL)
+    mutex = CreateSemaphore(NULL, 1, 1, NULL);
 
-    if (full == NULL) 
+    if (full == NULL)
     {
         printf("CreateSemaphore error: %d\n", GetLastError());
         return 1;
     }
 
-    if (empty == NULL) 
+    if (empty == NULL)
     {
         printf("CreateSemaphore error: %d\n", GetLastError());
         return 1;
     }
 
-    if (mutex == NULL) 
+    if (mutex == NULL)
     {
         printf("CreateSemaphore error: %d\n", GetLastError());
         return 1;
@@ -184,42 +185,56 @@ int _tmain()
 
     // create the producer threads
 
+    HANDLE producerthreads[PRODUCERS];
+    HANDLE consumerthreads[CONSUMERS];
+
     for (i = 0; i < PRODUCERS; i++)
-        if (CreateThread(NULL, 0, Producer, (LPVOID)i, 0, &producerId[i]) == NULL)
+    {
+        producerthreads[i] = CreateThread(NULL, 0, Producer, (LPVOID)i, 0, &producerId[i]);
+        
+        if (producerthreads[i] == NULL)
         {
-            ErrorHandler(TEXT("CreateThread"));
-            ExitProcess(3);
+            // ErrorHandler(TEXT("CreateThread"));
+            printf("Error on line 197\n");
+            ExitProcess(3); 
         }
+    }
+    
 
     // create consumer threads
 
     for (i = 0; i < CONSUMERS; i++)
-        if (CreateThread(NULL, 0, Consumer, (LPVOID)i, 0, &consumerId[i]) == NULL)
+    {
+        consumerthreads[i] = CreateThread(NULL, 0, Consumer, (LPVOID)i, 0, &consumerId[i]);
+
+        if (consumerthreads[i] == NULL)
         {
-            ErrorHandler(TEXT("CreateThread"));
-            ExitProcess(3);
+            // ErrorHandler(TEXT("CreateThread"));
+            printf("Error on line 197\n");
+            ExitProcess(3); 
         }
+    }
 
     // wait for threads to complete
 
     for (i = 0; i < PRODUCERS; i++)
     {
-        WaitForSingleObject(producerId[i], INFINITE)
+        WaitForSingleObject(producerthreads[i], INFINITE);
     }
 
     for (i = 0; i < CONSUMERS; i++)
     {
-        WaitForSingleObject(consumerId[i], INFINITE)
+        WaitForSingleObject(consumerthreads[i], INFINITE);
     }
 
     for (int i = 0; i < PRODUCERS; i++)
     {
-        CloseHandle(producerId[i]);
+        CloseHandle(producerthreads[i]);
     }
 
     for (int i = 0; i < CONSUMERS; i++)
     {
-        CloseHandle(consumerId[i]);
+        CloseHandle(consumerthreads[i]);
     }
 
     CloseHandle(full);
@@ -229,36 +244,36 @@ int _tmain()
     return 0;
 }
 
-void ErrorHandler(LPCTSTR lpszFunction)
-{
-    // Retrieve the system error message for the last-error code.
+// void ErrorHandler(LPCTSTR lpszFunction)
+// {
+//     // Retrieve the system error message for the last-error code.
 
-    LPVOID lpMsgBuf;
-    LPVOID lpDisplayBuf;
-    DWORD dw = GetLastError();
+//     LPVOID lpMsgBuf;
+//     LPVOID lpDisplayBuf;
+//     DWORD dw = GetLastError();
 
-    FormatMessage(
-        FORMAT_MESSAGE_ALLOCATE_BUFFER |
-            FORMAT_MESSAGE_FROM_SYSTEM |
-            FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL,
-        dw,
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPTSTR)&lpMsgBuf,
-        0, NULL);
+//     FormatMessage(
+//         FORMAT_MESSAGE_ALLOCATE_BUFFER |
+//             FORMAT_MESSAGE_FROM_SYSTEM |
+//             FORMAT_MESSAGE_IGNORE_INSERTS,
+//         NULL,
+//         dw,
+//         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+//         (LPTSTR)&lpMsgBuf,
+//         0, NULL);
 
-    // Display the error message.
+//     // Display the error message.
 
-    lpDisplayBuf = (LPVOID)LocalAlloc(LMEM_ZEROINIT,
-                                      (lstrlen((LPCTSTR)lpMsgBuf) + lstrlen((LPCTSTR)lpszFunction) + 40) * sizeof(TCHAR));
-    StringCchPrintf((LPTSTR)lpDisplayBuf,
-                    LocalSize(lpDisplayBuf) / sizeof(TCHAR),
-                    TEXT("%s failed with error %d: %s"),
-                    lpszFunction, dw, lpMsgBuf);
-    MessageBox(NULL, (LPCTSTR)lpDisplayBuf, TEXT("Error"), MB_OK);
+//     lpDisplayBuf = (LPVOID)LocalAlloc(LMEM_ZEROINIT,
+//                                       (lstrlen((LPCTSTR)lpMsgBuf) + lstrlen((LPCTSTR)lpszFunction) + 40) * sizeof(TCHAR));
+//     StringCchPrintf((LPTSTR)lpDisplayBuf,
+//                     LocalSize(lpDisplayBuf) / sizeof(TCHAR),
+//                     TEXT("%s failed with error %d: %s"),
+//                     lpszFunction, dw, lpMsgBuf);
+//     MessageBox(NULL, (LPCTSTR)lpDisplayBuf, TEXT("Error"), MB_OK);
 
-    // Free error-handling buffer allocations.
+//     // Free error-handling buffer allocations.
 
-    LocalFree(lpMsgBuf);
-    LocalFree(lpDisplayBuf);
-}
+//     LocalFree(lpMsgBuf);
+//     LocalFree(lpDisplayBuf);
+// }
