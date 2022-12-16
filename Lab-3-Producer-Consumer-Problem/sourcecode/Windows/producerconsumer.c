@@ -90,7 +90,6 @@ DWORD WINAPI Producer(LPVOID lpParam)
     while (j--)
     {
         // wait for random length of time from 0 to 3 seconds
-        int randnum = rand() % 4; // range between 0 and 3
         Sleep((rand() % 4) * 1000);
 
         // insert random initial into buffer
@@ -106,7 +105,7 @@ DWORD WINAPI Producer(LPVOID lpParam)
         ReleaseSemaphore(full, 1, NULL);
     }
 
-    ExitThread(0);
+    ExitThread(3);
 }
 
 // Consumer will iterate CONSUMER_ITERATIONS times and call the consumeInitial function to insert an initial to the buffer
