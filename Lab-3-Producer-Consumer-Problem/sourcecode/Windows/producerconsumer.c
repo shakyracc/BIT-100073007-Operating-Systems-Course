@@ -20,8 +20,6 @@
 DWORD WINAPI Producer(LPVOID lpParam);
 DWORD WINAPI Consumer(LPVOID lpParam);
 
-// void ErrorHandler(LPCTSTR lpszFunction);
-
 // define threads
 DWORD consumerId[CONSUMERS], producerId[PRODUCERS];
 HANDLE producerthreads[PRODUCERS];
@@ -41,7 +39,6 @@ buffer_t buffer;
 // insertInitial function is used to add an initial to the buffer
 int insertInitial(char initial, long int id)
 {
-
     buffer.value[buffer.next_in] = initial;
     buffer.next_in = (buffer.next_in + 1) % BUFFER_SIZE;
     printf("producer %ld: produced %c\n", id, initial);
@@ -59,7 +56,6 @@ int insertInitial(char initial, long int id)
 // consumeInitial function is used to consume an initial from the buffer
 int consumeInitial(char *initial, long int id)
 {
-
     *initial = buffer.value[buffer.next_out];
     buffer.value[buffer.next_out] = '-';
     buffer.next_out = (buffer.next_out + 1) % BUFFER_SIZE;
@@ -93,7 +89,6 @@ DWORD WINAPI Producer(LPVOID lpParam)
     {
         // wait for random length of time from 0 to 3 seconds
         int randnum = rand() % 4; // range between 0 and 3
-        // Sleep((rand() % 4) * 1000);
 
         // insert random initial into buffer
         int randInitial = rand() % length;
@@ -126,7 +121,6 @@ DWORD WINAPI Consumer(LPVOID lpParam)
         Sleep((rand() % 6) * 1000);
 
         // read from buffer
-
         WaitForSingleObject(full, INFINITE);
         WaitForSingleObject(mutex, INFINITE);
         if (consumeInitial(&initial, id))
@@ -141,12 +135,10 @@ DWORD WINAPI Consumer(LPVOID lpParam)
 int _tmain()
 
 {
-
     buffer.next_in = 0;
     buffer.next_out = 0;
 
     // Initialize buffer with '-'
-
     printf("\nInitialize buffer of size %d with '-' \n", BUFFER_SIZE);
 
     printf("\t\t\t\t\t\tBuffer: ");
@@ -158,7 +150,6 @@ int _tmain()
     printf("\n");
 
     // create producer and consumer threads
-
     long int i;
 
     printf("\nCreating %d Consumers and %d Producers\n\n", CONSUMERS, PRODUCERS);
@@ -186,35 +177,30 @@ int _tmain()
     }
 
     // create the producer threads
-
     for (i = 0; i < PRODUCERS; i++)
     {
         producerthreads[i] = CreateThread(NULL, 0, Producer, (LPVOID)i, 0, &producerId[i]);
 
         if (producerthreads[i] == NULL)
         {
-            // ErrorHandler(TEXT("CreateThread"));
             printf("Error on line 197\n");
             ExitProcess(3);
         }
     }
 
     // create consumer threads
-
     for (i = 0; i < CONSUMERS; i++)
     {
         consumerthreads[i] = CreateThread(NULL, 0, Consumer, (LPVOID)i, 0, &consumerId[i]);
 
         if (consumerthreads[i] == NULL)
         {
-            // ErrorHandler(TEXT("CreateThread"));
             printf("Error on line 197\n");
             ExitProcess(3);
         }
     }
 
     // wait for threads to complete
-
     for (i = 0; i < PRODUCERS; i++)
     {
         WaitForSingleObject(producerthreads[i], INFINITE);
@@ -241,37 +227,3 @@ int _tmain()
 
     return 0;
 }
-
-// void ErrorHandler(LPCTSTR lpszFunction)
-// {
-//     // Retrieve the system error message for the last-error code.
-
-//     LPVOID lpMsgBuf;
-//     LPVOID lpDisplayBuf;
-//     DWORD dw = GetLastError();
-
-//     FormatMessage(
-//         FORMAT_MESSAGE_ALLOCATE_BUFFER |
-//             FORMAT_MESSAGE_FROM_SYSTEM |
-//             FORMAT_MESSAGE_IGNORE_INSERTS,
-//         NULL,
-//         dw,
-//         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-//         (LPTSTR)&lpMsgBuf,
-//         0, NULL);
-
-//     // Display the error message.
-
-//     lpDisplayBuf = (LPVOID)LocalAlloc(LMEM_ZEROINIT,
-//                                       (lstrlen((LPCTSTR)lpMsgBuf) + lstrlen((LPCTSTR)lpszFunction) + 40) * sizeof(TCHAR));
-//     StringCchPrintf((LPTSTR)lpDisplayBuf,
-//                     LocalSize(lpDisplayBuf) / sizeof(TCHAR),
-//                     TEXT("%s failed with error %d: %s"),
-//                     lpszFunction, dw, lpMsgBuf);
-//     MessageBox(NULL, (LPCTSTR)lpDisplayBuf, TEXT("Error"), MB_OK);
-
-//     // Free error-handling buffer allocations.
-
-//     LocalFree(lpMsgBuf);
-//     LocalFree(lpDisplayBuf);
-// }
