@@ -24,6 +24,8 @@ DWORD WINAPI Consumer(LPVOID lpParam);
 
 // define threads
 DWORD consumerId[CONSUMERS], producerId[PRODUCERS];
+HANDLE producerthreads[PRODUCERS];
+HANDLE consumerthreads[CONSUMERS];
 
 // define semephore empty, full, mutex
 HANDLE empty, full, mutex;
@@ -90,7 +92,8 @@ DWORD WINAPI Producer(LPVOID lpParam)
     while (j--)
     {
         // wait for random length of time from 0 to 3 seconds
-        Sleep((rand() % 4) * 1000);
+        int randnum = rand() % 4; // range between 0 and 3
+        // Sleep((rand() % 4) * 1000);
 
         // insert random initial into buffer
         int randInitial = rand() % length;
@@ -105,7 +108,7 @@ DWORD WINAPI Producer(LPVOID lpParam)
         ReleaseSemaphore(full, 1, NULL);
     }
 
-    ExitThread(3);
+    ExitThread(0);
 }
 
 // Consumer will iterate CONSUMER_ITERATIONS times and call the consumeInitial function to insert an initial to the buffer
@@ -129,7 +132,7 @@ DWORD WINAPI Consumer(LPVOID lpParam)
         if (consumeInitial(&initial, id))
             fprintf(stderr, "Error while removing from buffer\n");
         ReleaseSemaphore(mutex, 1, NULL);
-        ReleaseSemaphore(full, 1, NULL);
+        ReleaseSemaphore(empty, 1, NULL);
     }
 
     ExitThread(0);
@@ -184,21 +187,17 @@ int _tmain()
 
     // create the producer threads
 
-    HANDLE producerthreads[PRODUCERS];
-    HANDLE consumerthreads[CONSUMERS];
-
     for (i = 0; i < PRODUCERS; i++)
     {
         producerthreads[i] = CreateThread(NULL, 0, Producer, (LPVOID)i, 0, &producerId[i]);
-        
+
         if (producerthreads[i] == NULL)
         {
             // ErrorHandler(TEXT("CreateThread"));
             printf("Error on line 197\n");
-            ExitProcess(3); 
+            ExitProcess(3);
         }
     }
-    
 
     // create consumer threads
 
@@ -210,7 +209,7 @@ int _tmain()
         {
             // ErrorHandler(TEXT("CreateThread"));
             printf("Error on line 197\n");
-            ExitProcess(3); 
+            ExitProcess(3);
         }
     }
 
