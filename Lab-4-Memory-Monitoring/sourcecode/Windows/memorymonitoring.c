@@ -1,23 +1,58 @@
 #include <windows.h>
 #include <stdio.h>
-#pragma comment(lib, "user32.lib")
 
-void main()
+void PrintHardDiskInfo()
 {
-   SYSTEM_INFO siSysInfo;
- 
-   // Copy the hardware information to the SYSTEM_INFO structure. 
- 
-   GetSystemInfo(&siSysInfo); 
- 
-   // Display the contents of the SYSTEM_INFO structure. 
+   printf("\nHARD DISK INFORMATION");
+   printf("\n---------------------\n");
+   printf("s Free : 10dGB Total : 10dGB NTFS\n");
 
-   printf("Hardware information: \n");  
-   printf("  Number of processors: %u\n", 
-      siSysInfo.dwNumberOfProcessors); 
-   printf("  Page size: %u\n", siSysInfo.dwPageSize); 
-   printf("  Processor type: %u\n", siSysInfo.dwProcessorType); 
-   printf("  Allocation Granularity: %u\n", siSysInfo.dwAllocationGranularity);
+}
 
-   return 0; 
+void PrintPhysicalMemoryInfo()
+{
+   printf("\nPHYSICAL MEMORY INFORMATION\n");
+   printf("------------------------------\n");
+   printf("Total Physical Memory: 10dMB\n");
+   printf("Available Physical Memory: 10dMB\n");
+   printf("Used Physical Memory: 10dMB\n");
+}
+
+void PrintSystemAddressLayout()
+{
+   printf("\nSYSTEM ADDRESS LAYOUT\n");
+   printf("------------------------------\n");
+}
+
+void PrintVirtualAddressSpaceLayout()
+{
+   printf("\nVIRTUAL ADDRESS SPACE LAYOUT\n");
+   printf("------------------------------\n");
+}
+
+void RunParentProcess()
+{
+   printf("\nRUNNING PARENT PROCESS\n");
+   printf("------------------------------\n");
+}
+
+void PrintRunningProcesses()
+{
+   printf("\nCURRENTLY RUNNING PROCESSES\n");
+   printf("------------------------------\n");
+}
+
+int main()
+{
+
+   printf("LAB 4: MEMORY MONITORING\n");
+
+   PrintHardDiskInfo();
+   PrintPhysicalMemoryInfo();
+   PrintSystemAddressLayout();
+   PrintVirtualAddressSpaceLayout();
+   RunParentProcess();
+   PrintRunningProcesses();
+
+   return 0;
 }
