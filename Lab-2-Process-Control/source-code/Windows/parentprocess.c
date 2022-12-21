@@ -13,10 +13,15 @@ void _tmain(int argc, TCHAR *argv[])
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
     ZeroMemory(&pi, sizeof(pi));
+	
+	// argv[2] = "childprocess";
+
+   printf("\nRUNNING PARENT PROCESS\n");
+   printf("------------------------------\n");
 
     if (argc != 2) /* argc should be 2 for correct execution */
     {
-        printf("Usage: %s [cmdline]\n", argv[0]);
+        printf("Usage in parentprocess: %s [cmdline]\n", argv[0]);
         return;
     }
 
