@@ -27,7 +27,10 @@ int main (int argc, char *argv[]) {
 		gettimeofday(&end, NULL);
 		printf("The child process end time is: %ld seconds %ld micro seconds\n", end.tv_sec, end.tv_usec);
 		printf("The child process elapsed time is: %lds.%ldms\n", (end.tv_sec - start.tv_sec), (end.tv_usec - start.tv_usec) / 1000);
-		sleep(3);
+		
+		printf("\nParent process PID: %d\n", (int)getpid());
+		printf("Child process PID: %d\n", pid);
+		sleep(10);
 	}
 	else {
 		printf("Error while forking \n");
