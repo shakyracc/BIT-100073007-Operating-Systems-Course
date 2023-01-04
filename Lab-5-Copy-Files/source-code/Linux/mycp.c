@@ -11,7 +11,7 @@
 increasing the buffer size beyond 4096 has little positive effect. */
 const int BUFFER = 4096;
 
-/* ??? */
+/* maximum path lenth limitation */
 const int MAX_PATH = 260;
 
 void copyFile(char sourceDir[MAX_PATH], char targetDir[MAX_PATH])
@@ -166,7 +166,7 @@ int main(int argc, char const *argv[])
     printf("Error: Source directory not found/n");
   }
 
-  // Create object file (if there is no object file)
+  // Create target directory (if there is no target directory )
   if ((dir = opendir(target)) == NULL)
   {
 
