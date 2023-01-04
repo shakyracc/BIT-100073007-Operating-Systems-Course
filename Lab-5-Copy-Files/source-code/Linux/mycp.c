@@ -1,11 +1,11 @@
-#include <unistd.h> 
-#include <string.h>
+#include <unistd.h>     // read(), write() - read/write from/to a file 
+#include <string.h>     // strcmp() - compare two strings
 #include <stdio.h>
-#include <dirent.h>
-#include <sys/types.h>
-#include <sys/stat.h> // lstat(), chmod()
-#include <fcntl.h>
-#include <utime.h>
+#include <dirent.h>     // opendir(), readdir()
+#include <sys/types.h>  // opendir()
+#include <sys/stat.h>   // lstat(), chmod()
+#include <fcntl.h>      // open(), creat() = open and possibly create a 
+#include <utime.h>      // utime() - change file last access and mod times
 
 /* buffer size is set to 4096 because thats the tyical sector size on a disk.
 increasing the buffer size beyond 4096 has little positive effect. */
