@@ -45,13 +45,16 @@ int main(int argc, char const *argv[])
 
     // check if the source file exists and open the directory
 
-    if (opendir(source) == NULL) //  opendir - open a directory
+    DIR *sourceDir;
+    DIR *targetDir;
+
+    if ((sourceDir = opendir(source)) == NULL) //  opendir - open a directory
     {
         printf("Error: Source directory not found/n");
     }
 
     // Create target directory (if there is no target directory )
-    if (opendir(target) == NULL)
+    if ((targetDir = opendir(target)) == NULL)
     {
         // Store the attributes of the source file into fileAttributeBuffer
         stat(source, &fileAttributeBuffer); // stat() - get file attributes
@@ -81,8 +84,8 @@ void searchDirectory(char sourcePath[MAX_PATH], char targetPath[MAX_PATH])
     strcpy(source, sourcePath); // strcpy - copy a string
     strcpy(target, targetPath);
 
-    DIR *sourceDir = opendir(sourcePath);
-    DIR *targetDir = opendir(targetPath);
+    DIR *sourceDir = opendir(source);
+    DIR *targetDir = opendir(target);
 
       /* the dirent structure 
       struct dirent {
@@ -93,7 +96,7 @@ void searchDirectory(char sourcePath[MAX_PATH], char targetPath[MAX_PATH])
         char           d_name[256]; // Null-terminated filename 
       };
   */
-    struct dirent *entry = NULL;
+    struct dirent *entry;
 
     /* The stat structure
       struct stat {
@@ -128,6 +131,8 @@ void searchDirectory(char sourcePath[MAX_PATH], char targetPath[MAX_PATH])
             strcat(source, entry->d_name);
             strcat(target, "/");
             strcat(target, entry->d_name);
+
+            stat(source, &fileAttributeBuffer);
 
             mkdir(target, fileAttributeBuffer.st_mode);
             timebuf.actime = fileAttributeBuffer.st_atime;
