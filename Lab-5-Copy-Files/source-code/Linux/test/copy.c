@@ -18,23 +18,7 @@ const int BUFFER = 4096;
 /* maximum path length limitation */
 const int MAX_PATH = 260;
 
-// directory replication using dfs or bfs to search is equivalent
-void searchDirectory(char *sourcePath, char *targetPath);
-
-// copy files
-void copyFile(const char *source_file, const char *dst_file);
-
-// copy directory
-void copyDirectory(const char *source_dir, const char *dst_dir);
-
-// copy soft link
-// void copy_sln(const char *src_file, const char *dst_file);
-
-// Modify the file attributes to be consistent with the source file
-void changeAttributes(const char *source, const char *dst);
-
-// modify path
-void changePath(char *source, char *cat);
+void searchDirectory(char sourcePath[MAX_PATH], char targetPath[MAX_PATH]);
 
 int main(int argc, char const *argv[])
 {
@@ -43,8 +27,6 @@ int main(int argc, char const *argv[])
         printf("usage: ./mycp <source-directory> <targetDirectory>/n");
         return -1;
     }
-
-    char *current_dir = getcwd(NULL, 0);
 
     /* taking the contents of argv[] and adding them to character array source and target for clarity and ease*/
     char source[MAX_PATH], target[MAX_PATH];
@@ -59,18 +41,18 @@ int main(int argc, char const *argv[])
         return int 		        // Returns 0 successfully, otherwise -1
     */
     struct stat fileAttributeBuffer;
+    struct utimbuf timebuf; 
 
     // check if the source file exists and open the directory
 
-    if ((dir = opendir(source)) == NULL) //  opendir - open a directory
+    if (opendir(source) == NULL) //  opendir - open a directory
     {
         printf("Error: Source directory not found/n");
     }
 
     // Create target directory (if there is no target directory )
-    if ((dir = opendir(target)) == NULL)
+    if (opendir(target) == NULL)
     {
-
         // Store the attributes of the source file into fileAttributeBuffer
         stat(source, &fileAttributeBuffer); // stat() - get file attributes
 
@@ -99,15 +81,40 @@ void searchDirectory(char sourcePath[MAX_PATH], char targetPath[MAX_PATH])
     strcpy(source, sourcePath); // strcpy - copy a string
     strcpy(target, targetPath);
 
-    // printf("Searching directory:    %s\n", getcwd(NULL, 0));
-    DIR *source_dir = opendir(sourcePath);
-    DIR *target_dir = opendir(targetPath);
+    DIR *sourceDir = opendir(sourcePath);
+    DIR *targetDir = opendir(targetPath);
+
+      /* the dirent structure 
+      struct dirent {
+        ino_t          d_ino;       // Inode number 
+        off_t          d_off;       // Not an offset; see below 
+        unsigned short d_reclen;    // Length of this record 
+        unsigned char  d_type;      // Type of file; not supported by all filesystem types 
+        char           d_name[256]; // Null-terminated filename 
+      };
+  */
     struct dirent *entry = NULL;
+
+    /* The stat structure
+      struct stat {
+        struct timespec st_atim; // Time of last access
+        struct timespec st_mtim;  // Time of last modification
+        struct timespec st_ctim;  // Time of last status change
+      };
+  */
     struct stat fileAttributeBuffer;
+
+      /* The utimbuf structure is:
+      struct utimbuf {
+        time_t actime;   // access time
+        time_t modtime;  // modification time
+      };
+  */
     struct utimbuf timebuf;
+
     char buffer[BUFFER];
 
-    while ((entry = readdir(source_dir)) != NULL)
+    while ((entry = readdir(sourceDir)) != NULL)
     {
         lstat(entry->d_name, &fileAttributeBuffer);
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
@@ -143,98 +150,39 @@ void searchDirectory(char sourcePath[MAX_PATH], char targetPath[MAX_PATH])
             strcat(target, "/");
             strcat(target, entry->d_name);
 
-            // call copy function
-            copyFile(source, target);
-
-            int sourceData = open(source, 0_RDONLY);
+            // start copy file
+            int sourceData = open(source, O_RDONLY);
             if (sourceData == -1)
             {
                 printf("Error: Failed to open file./n");
             }
 
-            while(read(sourceData, buffer, BUFFER)) > 0)
+            stat(source, &fileAttributeBuffer);
+
+            int targetData = creat(targetPath, fileAttributeBuffer.st_mode);
+            if(targetData == -1)
             {
-                write(targetData)
+                printf("Error: File creation failed./n");
             }
 
-            strcpy(source, sourceDir);
-            strcpy(target, targetDir);
+            int wordbit;
+            while ((wordbit = read(sourceData, buffer, BUFFER)) > 0)
+            {
+                if (write(targetData, buffer, wordbit) != wordbit)
+                {
+                printf("Error: Write file failed./n"); 
+                }
+
+                timebuf.actime = fileAttributeBuffer.st_atime;
+                timebuf.modtime = fileAttributeBuffer.st_mtime;
+                close(sourceData);
+                close(targetData);
+
+            // end of copy file
+
+            strcpy(source, sourcePath);
+            strcpy(target, targetPath);
         }
     }
 }
-
-void copyFile(const char *source_file, const char *target_file)
-{
-    int source_fd = open(source_file, O_RDONLY);
-    int target_fd = creat(target_file, O_WRONLY);
-
-    unsigned char buf[1024];
-    while (read(source_fd, buf, sizeof(buf)) > 0)
-    {
-        write(target_fd, buf, sizeof(buf));
-    }
-
-    changeAttributes(source_file, target_file);
-
-    close(source_fd);
-    close(target_fd);
-}
-
-void copy_sln(const char *source_file, const char *dst_file)
-{
-    char buf[1024];
-    memset(buf, 0, sizeof(buf));
-    int len = 0;
-    if ((len = readlink(source_file, buf, sizeof(buf))) > 0)
-    {
-        printf("%s\n", buf);
-        if (symlink(buf, dst_file) == -1)
-        {
-            perror("symlink");
-        }
-    }
-    changeAttributes(source_file, dst_file);
-}
-
-void changeAttributes(const char *source, const char *target)
-{
-    struct stat attr_of_source;
-    lstat(source, &attr_of_source);
-    // Modify file attributes
-    chmod(dst, attr_of_source.st_mode); // change permission of directory
-    // Modify file user group
-    chown(dst, attr_of_source.st_uid, attr_of_source.st_gid);
-
-    // Modify file access, modification time
-    struct timeval time_buf[2];
-    time_buf[1].tv_sec = attr_of_source.st_mtime;
-    time_buf[0].tv_sec = attr_of_source.st_atime;
-    if (lutimes(dst, time_buf) == -1)
-    {
-        printf("%s\n", dst);
-        perror("lutimes");
-    }
-
-    struct utimbuf tbuf;
-    tbuf.actime = attr_of_source.st_atime;
-    tbuf.modtime = attr_of_source.st_mtime;
-    utime(dst, &tbuf);
-
-    struct stat dst_attr_of_source;
-    lstat(dst, &dst_attr_of_source);
-    if (dst_attr_of_source.st_mtime != attr_of_source.st_mtime)
-        printf("%s : %d\n", dst, attr_of_source.st_mtime);
-
-    mkdir(target, fileAttributeBuffer.st_mode);
-    timebuf.actime = fileAttributeBuffer.st_atime;
-    timebuf.modtime = fileAttributeBuffer.st_mtime;
-
-    // int utime(const char *filename, const struct utimbuf *times);
-    utime(target, &timebuf); // change file last access and modification times
-}
-
-void changePath(char *source, char *cat)
-{
-    strcat(source, (char *)"/");
-    strcat(source, cat);
 }
