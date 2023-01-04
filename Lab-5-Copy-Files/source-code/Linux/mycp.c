@@ -1,4 +1,4 @@
-#include <iostream>
+#include <stdio.h>
 #include <unistd.h>    // read(), write() - read/write from/to a file descriptor
 #include <sys/types.h> // opendir()
 #include <dirent.h>    // opendir(), readdir()
@@ -6,9 +6,6 @@
 #include <utime.h>     // utime()
 #include <fcntl.h>     // open(), creat() = open and possibly create a file
 #include <string.h>    // strcmp() - compare two strings
-
-/* using namespace std means we use the namespace named std (standard).*/
-using namespace std;
 
 /* buffer size is set to 4096 because thats the tyical sector size on a disk.
 increasing the buffer size beyond 4096 has little positive effect. */
